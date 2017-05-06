@@ -9,37 +9,37 @@ requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS = 'ALL'
 
 SITE = 'https://tw.user.mall.yahoo.com/rating/list?sid='
 SITE_SEED = '&s=&b='
+SELLER_ID = str(sys.argv[1])
+FIRST_PAGE_URL = SITE + SELLER_ID + SITE_SEED + '1'
 
-def get_seller_name(seller):
-	page_url = SITE + seller + SITE_SEED + '1'
-	html_text = session.get(page_url, verify = True)
+def get_seller_name():
+	html_text = session.get(FIRST_PAGE_URL, verify = True)
 	soup = BeautifulSoup(html_text.text.encode('utf-8'), 'html.parser')
 	name = soup.find('title').getText().split('-')[0]
 
 	return name
 
-def get_last_page(seller):
-	page_url = SITE + seller + SITE_SEED + '1'
-	html_text = session.get(page_url, verify = True)
+def get_last_page():
+	html_text = session.get(FIRST_PAGE_URL, verify = True)
 	soup = BeautifulSoup(html_text.text.encode('utf-8'), 'html.parser')
 	class_found = soup.find('span', {'class': 'pagenum'}).getText()
 	last_page_num = class_found.split(' ')[5]
 	
 	return last_page_num
 
-def get_pages_url(seller):
-	last_page = get_last_page(seller)
+def get_pages_url():
+	last_page = get_last_page()
 	pages = []
 	for num in range(1, int(last_page) + 1):
-		page_url = SITE + seller + SITE_SEED + str(num)
+		page_url = SITE + SELLER_ID + SITE_SEED + str(num)
 		pages.append(page_url)
 
 	return pages
 
 def get_comment():
-	seller_id = 'ryoushoku'
-	seller_name = get_seller_name(seller_id)
-	pages = get_pages_url(seller_id)
+	# seller_id = 'ryoushoku'
+	seller_name = get_seller_name()
+	pages = get_pages_url()
 
 	comments_ary = []
 	for page in pages:
@@ -65,12 +65,12 @@ def get_comment():
 			print (buyer_id)			
 	
 	comments_per_shop = {
-		'seller_id': seller_id,
+		'seller_id': SELLER_ID,
 		'seller_name': seller_name,
 		'comments': comments_ary
 	}	
 
-	file_name = seller_id + ' ' + str(time.strftime("%Y%m%d")) + '.json'
+	file_name = SELLER_ID + ' ' + str(time.strftime("%Y%m%d")) + '.json'
 	comment_file = open('json/' + file_name, 'w', encoding='utf-8')
 	comment_file.write(json.dumps(comments_per_shop, indent=4, ensure_ascii=False))
 	comment_file.close()
