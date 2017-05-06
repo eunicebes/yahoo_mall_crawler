@@ -15,7 +15,7 @@ FIRST_PAGE_URL = SITE + SELLER_ID + SITE_SEED + '1'
 def get_seller_name():
 	# html_text = session.get(FIRST_PAGE_URL, verify = True)
 	# soup = BeautifulSoup(html_text.text.encode('utf-8'), 'html.parser')
-	name = FIRST_PAGE_SOUP.find('title').getText().split('-')[0]
+	name = '-'.join(FIRST_PAGE_SOUP.find('title').getText().split('-')[:-1])
 
 	return name
 
@@ -73,7 +73,7 @@ def get_comment():
 			}
 			
 			comments_ary.append(comment)
-			
+
 			print (buyer_id)			
 	
 	comments_per_shop = {
