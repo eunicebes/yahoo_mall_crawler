@@ -7,21 +7,34 @@ import os
 import requests.packages.urllib3.util.ssl_
 requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS = 'ALL'
 
-SITE = 'https://tw.user.mall.yahoo.com/rating/list?sid='
-SITE_SEED = '&s=&b='
+SITE = 'https://tw.user.mall.yahoo.com/'
+INFO_FOOT = 'booth/view/stIntroMgt?sid='
+COMMENT_SEED = 'rating/list?sid='
+COMMENT_FOOT = '&s=&b='
 SELLER_ID = str(sys.argv[1])
-FIRST_PAGE_URL = SITE + SELLER_ID + SITE_SEED + '1'
+FIRST_PAGE_URL = SITE + COMMENT_SEED + SELLER_ID + COMMENT_FOOT + '1'
 
-def get_seller_name():
-	# html_text = session.get(FIRST_PAGE_URL, verify = True)
-	# soup = BeautifulSoup(html_text.text.encode('utf-8'), 'html.parser')
-	name = '-'.join(FIRST_PAGE_SOUP.find('title').getText().split('-')[:-1])
-
-	return name
+def get_info():
+	page_url = SITE + INFO_FOOT + SELLER_ID
+	html_text = session.get(page_url, verify = True)
+	soup = BeautifulSoup(html_text.text.encode('utf-8'), 'html.parser')
+	class_found = soup.find_all('div', {'class': 'bpgbd'}, 'html.parser')[-1]
+	infos = class_found.find('ul').find_all('li')
+	
+	info_dic = {
+		'seller_name': '-'.join(soup.find('title').getText().split('-')[:-1]),
+		'corporation': infos[0].getText().split('：')[1],
+		'representative': infos[1].getText().split('：')[1],
+		'tel': infos[2].getText().split('：')[1],
+		'fax': infos[3].getText().split('：')[1],
+		'address': infos[4].getText().split('：')[1],
+		'start_date': infos[5].getText().split('：')[1]
+	}
+	return info_dic
 
 def get_last_page():
-	# html_text = session.get(FIRST_PAGE_URL, verify = True)
-	# soup = BeautifulSoup(html_text.text.encode('utf-8'), 'html.parser')
+	html_text = session.get(FIRST_PAGE_URL, verify = True)
+	soup = BeautifulSoup(html_text.text.encode('utf-8'), 'html.parser')
 	class_found = FIRST_PAGE_SOUP.find('span', {'class': 'pagenum'}).getText()
 	last_page_num = class_found.split(' ')[5]
 	
@@ -31,7 +44,7 @@ def get_pages_url():
 	last_page = get_last_page()
 	pages = []
 	for num in range(1, int(last_page) + 1):
-		page_url = SITE + SELLER_ID + SITE_SEED + str(num)
+		page_url = SITE + COMMENT_SEED + SELLER_ID + COMMENT_FOOT + str(num)
 		pages.append(page_url)
 
 	return pages
@@ -46,7 +59,6 @@ def check_good_store():
 
 def get_comment():
 	# seller_id = 'ryoushoku'
-	seller_name = get_seller_name()
 	pages = get_pages_url()
 	good_store = check_good_store()
 
@@ -76,17 +88,17 @@ def get_comment():
 
 			print (buyer_id)			
 	
-	comments_per_shop = {
-		'seller_id': SELLER_ID,
-		'seller_name': seller_name,
-		'comments': comments_ary
-	}	
+	return comments_ary	
+
+def write_json_file(info, comments):
+
+	info['seller_id'] = SELLER_ID
+	info['comments'] = comments
 
 	file_name = SELLER_ID + ' ' + str(time.strftime("%Y%m%d")) + '.json'
 	comment_file = open('json/' + file_name, 'w', encoding='utf-8')
-	comment_file.write(json.dumps(comments_per_shop, indent=4, ensure_ascii=False))
+	comment_file.write(json.dumps(info, indent=4, ensure_ascii=False))
 	comment_file.close()
-
 
 if __name__ == "__main__":
     session = requests.session()
@@ -94,5 +106,10 @@ if __name__ == "__main__":
     FIRST_PAGE_HTML = session.get(FIRST_PAGE_URL, verify = True)
     FIRST_PAGE_SOUP = BeautifulSoup(FIRST_PAGE_HTML.text.encode('utf-8'), 'html.parser')
 
+    # get seller's information
+    info = get_info()
+
     # get and store all buyer reviews
-    get_comment()
+    comments = get_comment()
+
+    write_json_file(info, comments)
