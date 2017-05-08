@@ -17,8 +17,14 @@ A crawler for gathering all buyers' comments per shop from Yahoo Mall
 JSON file
 
 	{
-	    "seller_name": seller's name,
-	    "seller_id": seller's id,
+	    "seller_name": ...,
+	    "corporation": ...,
+	    "representative": ...,
+	    "tel": ...,
+	    "fax": ...,
+	    "address": ...,
+	    "start_date": ...,
+	    "seller_id": ...,
 	    "comments":[
 		{
 		    "buyer_id": buyer's id,
